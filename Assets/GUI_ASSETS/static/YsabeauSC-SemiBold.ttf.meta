@@ -1,0 +1,28 @@
+fileFormatVersion: 2
+guid: 4f3f4eee7b7a5f844a56d0ea60b0a94e
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Ysabeau SC
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 43975383dfc116146bb896b5884e2d05, type: 3}
+  - {fileID: 12800000, guid: fa751def3a5820842a58b3f999e50cc5, type: 3}
+  - {fileID: 12800000, guid: e24f526f59a52ea4b87e8fc2557349f1, type: 3}
+  - {fileID: 12800000, guid: e5eae3700b07e13469c12e91f1edc698, type: 3}
+  - {fileID: 12800000, guid: 07f389ce3ab7674419d66b84fba81f26, type: 3}
+  - {fileID: 12800000, guid: 27f5915c31d3e0a45a17223635fa08f5, type: 3}
+  - {fileID: 12800000, guid: 36443d1e4ec55834fa8742398379e150, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
