@@ -1854,9 +1854,21 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 903151492026011951, guid: 11ce2e1784f7e2b4fbb1ae70b5ce8b11, type: 3}
+      propertyPath: NetworkConfig.PlayerPrefab
+      value: 
+      objectReference: {fileID: 4737832559511664253, guid: c42fa36da0beb2949b4fa086437611bc, type: 3}
+    - target: {fileID: 903151492026011951, guid: 11ce2e1784f7e2b4fbb1ae70b5ce8b11, type: 3}
       propertyPath: NetworkConfig.NetworkPrefabs.Array.size
       value: 3
       objectReference: {fileID: 0}
+    - target: {fileID: 903151492026011951, guid: 11ce2e1784f7e2b4fbb1ae70b5ce8b11, type: 3}
+      propertyPath: NetworkConfig.NetworkPrefabs.Array.data[0].Prefab
+      value: 
+      objectReference: {fileID: 4737832559511664253, guid: c42fa36da0beb2949b4fa086437611bc, type: 3}
+    - target: {fileID: 903151492026011951, guid: 11ce2e1784f7e2b4fbb1ae70b5ce8b11, type: 3}
+      propertyPath: NetworkConfig.NetworkPrefabs.Array.data[1].Prefab
+      value: 
+      objectReference: {fileID: 4737832559511664253, guid: 3ca04738051835c4d973e9668450307e, type: 3}
     - target: {fileID: 903151492026011953, guid: 11ce2e1784f7e2b4fbb1ae70b5ce8b11, type: 3}
       propertyPath: m_Name
       value: NetworkManager
@@ -6244,6 +6256,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 644546481}
     - target: {fileID: 1700436923791805722, guid: ef88af0e1b363d44eae53352c9d657c9, type: 3}
+      propertyPath: charactersArrayOnline.Array.data[0]
+      value: 
+      objectReference: {fileID: 4737832559511664253, guid: c42fa36da0beb2949b4fa086437611bc, type: 3}
+    - target: {fileID: 1700436923791805722, guid: ef88af0e1b363d44eae53352c9d657c9, type: 3}
+      propertyPath: charactersArrayOnline.Array.data[1]
+      value: 
+      objectReference: {fileID: 4737832559511664253, guid: 3ca04738051835c4d973e9668450307e, type: 3}
+    - target: {fileID: 1700436923791805722, guid: ef88af0e1b363d44eae53352c9d657c9, type: 3}
       propertyPath: charactersArrayOffline.Array.data[1]
       value: 
       objectReference: {fileID: 4737832559511664253, guid: 526aac578b41d4648aef484001a1416f, type: 3}
@@ -7648,6 +7668,10 @@ PrefabInstance:
     - target: {fileID: 6364382852180047776, guid: 3d972c008f5de5d4e80043ea016754a4, type: 3}
       propertyPath: m_Name
       value: MatchmakingPanel
+      objectReference: {fileID: 0}
+    - target: {fileID: 6364382852180047776, guid: 3d972c008f5de5d4e80043ea016754a4, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6364382852180047779, guid: 3d972c008f5de5d4e80043ea016754a4, type: 3}
       propertyPath: m_Pivot.x

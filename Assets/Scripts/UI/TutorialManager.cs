@@ -62,7 +62,7 @@ public class TutorialManager : MonoBehaviour
             case 12:
                 tutorialText.color = Color.white;
                 tutorialImage.gameObject.SetActive(false);
-                
+                StartCoroutine("PassToNextMessage");
                 break;                           
 
             case 13:
@@ -82,7 +82,7 @@ public class TutorialManager : MonoBehaviour
         yield return new WaitForSeconds(timeBetweenMessages);
         tutorialtextIndex++;
         UpdateTutorialCanvas();
-
+        print("Update");
         if (tutorialtextIndex == 13) tutorialPanel.SetActive(false);
     }
 

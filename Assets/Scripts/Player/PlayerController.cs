@@ -179,17 +179,12 @@ public class PlayerController : MonoBehaviour
 
 
     private void Awake()
-    {
-
-        
+    {        
         currentState = PlayerState.IDLE;
         canMove = true;
         Physics.gravity = new Vector3(0, -20.0F, 0);
         cam = GameObject.FindGameObjectWithTag("MainCamera");
-        gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
-        
-        //cam.GetComponent<CinemachineFreeLook>().Follow = GameObject.Find("Orientation").transform;
-        //cam.GetComponent<CinemachineFreeLook>().LookAt = GameObject.Find("Orientation").transform;
+        gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();               
         playerOneSpawn = GameObject.FindGameObjectWithTag("PlayerOneSpawn").transform;
         playerTwoSpawn = GameObject.FindGameObjectWithTag("PlayerTwoSpawn").transform;
 
@@ -302,27 +297,15 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         if (!Application.isFocused) return;
-        else
-        {
-            TakeInputs();
-            FixJump();
-        }
+        
+        TakeInputs();
+        FixJump();
+       
         
     }
-
-    //private void Update()
-    //{
-    //    if(enemy != null && enemyController == null)
-    //    {
-    //        enemyController = enemy.GetComponent<PlayerController>();
-    //        print("Asigno");
-    //    }
-            
-    //}
     private void TakeInputs()
     {
-        MovePlayer();
-        MoveCamera();
+        MovePlayer();        
         Jump();
         BasicAtacking();
         SlowAtack();
@@ -373,9 +356,6 @@ public class PlayerController : MonoBehaviour
         if (isParrying)
         {
             enemyController.currentState = PlayerState.STUNNED;
-
-            //enemyController.canChangeState = false;
-            //enemyController.canMove = false;
             if (enemyController.playerAnimator.GetBool("Stunned") == false)
             {
 
@@ -459,10 +439,11 @@ public class PlayerController : MonoBehaviour
                 }
 
                 enemyController.gameManager.ChangeMagic((int)totalDmgDone, !playerOne);
-
+                
 
                 relativePos.y = 0.8f;                
-                GetComponent<Rigidbody>().AddForce((relativePos * totalDmgDone * enemyController.currentChargedAttackForce) * 0.2f, ForceMode.Impulse);                
+                GetComponent<Rigidbody>().AddForce((relativePos * totalDmgDone * enemyController.currentChargedAttackForce) * 0.1f, ForceMode.Impulse);
+                print("Get knocked up");
             }
             else if(enemyController.currentState == PlayerState.FAST_ATACK)
             {                
@@ -470,9 +451,12 @@ public class PlayerController : MonoBehaviour
                 if (playerAnimator.GetBool("Receiving") == false)
                 {
                     playerAnimator.SetBool("Receiving", true);
+
+                    if (enemyController.basicAtackImpactParticle.isPlaying) enemyController.basicAtackImpactParticle.Clear();
                     enemyController.basicAtackImpactParticle.Play();
+
                     playerAudio.clip = basicAttackImpactSound;
-               
+                    if (playerAudio.isPlaying) playerAudio.Stop();
                     playerAudio.Play();
                     print("Audio is playing: " + playerAudio.isPlaying);
                 }
@@ -542,11 +526,10 @@ public class PlayerController : MonoBehaviour
         canMove = true;
 
         canChangeState = true;
-   
-        print("Reset de animación");
 
+        chargingSlowAttack = false;
 
-       
+        chargeTimer = 0f;
 
         if (playerAnimator.GetBool("Receiving") == true)
         {
@@ -567,8 +550,15 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            currentState = PlayerState.IDLE;
-            print("Cambio a idle");
+            if (movementInput != Vector2.zero && canMove)
+            {
+                currentState = PlayerState.MOVEMENT;
+
+                playerAnimator.SetBool("Running", true);
+            }
+               
+            else currentState = PlayerState.IDLE;
+            
         }
 
         if (playerAnimator.GetBool("Stunned") == true)
@@ -576,11 +566,14 @@ public class PlayerController : MonoBehaviour
             playerAnimator.SetBool("Stunned", false);
         }
 
-        if(playerAnimator.GetBool("BasicAtack") == true)
+
+        if (playerAnimator.GetBool("SlowAttack") == true)
         {
-            playerAnimator.SetBool("BasicAtack", false);
+            playerAnimator.SetBool("SlowAttack", false);
+
         }
-    
+
+
     }
 
     private void Taunting()
@@ -784,6 +777,7 @@ public class PlayerController : MonoBehaviour
         {
             currentState = PlayerState.FAST_ATACK;
             playerAnimator.SetBool("BasicAtack", true);
+            if (basicAtackSlashParticle.isPlaying) basicAtackSlashParticle.Clear();
             basicAtackSlashParticle.Play();
             playerAudio.clip = basicAttackSlashSound;
             playerAudio.Play();
@@ -803,18 +797,11 @@ public class PlayerController : MonoBehaviour
             {
                 if (playerAnimator.GetBool("BasicAtack") == true)
                 {
-                    playerAnimator.SetBool("BasicAtack", false);
-                    currentState = PlayerState.IDLE;
-                    print("Cambio a idle");
+                    playerAnimator.SetBool("BasicAtack", false);                    
                 }
             }
             if (!basicAtacking && !canBasicAttack) canBasicAttack = true;
-            //if (!basicAtacking && canChangeState)
-            //{
-            //    if(!canBasicAttack) canBasicAttack = true;
-
-               
-            //}
+            
             
         }        
     }
@@ -839,29 +826,18 @@ public class PlayerController : MonoBehaviour
         {
             if (!slowAtacking)
             {
-                if (playerAnimator.GetBool("SlowAttack") == true)
-                {
-                    playerAnimator.SetBool("SlowAttack", false);
-                    slowAtackSlashParticle.Play();
-                    chargeSlowAttackParticle.Stop();
-                }
-
+                if(chargeSlowAttackParticle.isPlaying) chargeSlowAttackParticle.Stop();
                 
-
-                //if (!canSlowAttack) canSlowAttack = true;
 
                 if (GetComponent<Animator>().speed == 0f  && currentState == PlayerState.SLOW_ATACK)
-                {
+                {                  
                     GetComponent<Animator>().speed = 1f;
-                   
-                    chargingSlowAttack = false;
-                
+                    slowAtackSlashParticle.Play();
                 }
 
                 if (!chargingSlowAttack && !canSlowAttack) canSlowAttack = true;
 
-                currentChargedAttackForce = chargeTimer * 5;
-                //print(currentChargedAttackForce);
+                currentChargedAttackForce = chargeTimer * 5;              
             }
             
         }
@@ -877,13 +853,11 @@ public class PlayerController : MonoBehaviour
                 if (GetComponent<Animator>().speed == 0f)
                 {
                     GetComponent<Animator>().speed = 1f;
-                    chargingSlowAttack = false;
-                    if (playerAnimator.GetBool("SlowAttack") == true)
-                    {
-                        playerAnimator.SetBool("SlowAttack", false);
-                        slowAtackSlashParticle.Play();
-                        chargeSlowAttackParticle.Stop();
-                    }
+
+                    slowAtackSlashParticle.Play();
+                    chargeSlowAttackParticle.Stop();
+                    currentChargedAttackForce = chargeTimer * 5;
+                   
                 }
             }
         }
@@ -895,6 +869,12 @@ public class PlayerController : MonoBehaviour
         {
             GetComponent<Animator>().speed = 0f;
           
+        }
+        else
+        {
+            if (!slowAtackSlashParticle.isPlaying) slowAtackSlashParticle.Play();
+
+
         }
     }
     public void FastAttackDmg()
@@ -920,7 +900,7 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator DisableHitFast()
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 15; i++)
         {
             yield return null;
         }
@@ -934,29 +914,21 @@ public class PlayerController : MonoBehaviour
     }
     IEnumerator DisableHitPoints()
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 15; i++)
         {
-            yield return null;
+            yield return null;            
         }
         foreach (BoxCollider box in hitPoints)
         {
             box.enabled = false;
         }
-        chargingSlowAttack = false;
+        //chargingSlowAttack = false;
+        print("Quito la carga");
         chargeTimer = 0f;
 
         if (enemyTriggered)
             enemyTriggered = false;
     }
-    private void MoveCamera()
-    {
-        //xRot -= cursorY * cameraSensitivity;
-        //transform.Rotate(0f, cursorX * cameraSensitivity, 0f);
-        //playerCameraPosition.transform.localRotation = Quaternion.Euler(xRot, 0f, 0f);
-        
-       
-    }
-
     private void MovePlayer()
     {
         Vector3 viewDir = transform.position - new Vector3(cam.transform.position.x, transform.position.y, cam.transform.position.z);
@@ -1106,18 +1078,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
-    //private void OnCollisionStay(Collision collision)
-    //{
-    //    if (collision.gameObject.CompareTag("Floor"))
-    //    {        
-
-    //        playerRb.useGravity = true;
-    //    }
-    //}
-
-
-
+    
     private void OnTriggerEnter(Collider other)
     {      
 

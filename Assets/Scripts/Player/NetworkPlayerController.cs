@@ -13,8 +13,6 @@ using UnityEngine.Networking.Types;
 
 public class NetworkPlayerController : NetworkBehaviour
 {
-
-
     public enum PlayerState
     {
         FAST_ATACK, SLOW_ATACK, BLOCK, PARRY, DASH, VOODOO_POW, MOVEMENT, IDLE, JOKE, HIT, STUNNED, KNOCKED_UP
@@ -26,10 +24,7 @@ public class NetworkPlayerController : NetworkBehaviour
 
     [Header("Server variables")]
     public PlayerState playerOneState;
-    public PlayerState playerTwoState;
-    public double latency = 0;
-    public double lastTime = 0;
-    [SerializeField] TextMeshProUGUI latencyText;
+    public PlayerState playerTwoState;     
 
     [Header("Game State")]
     [SerializeField] Transform playerOneSpawn;
@@ -165,6 +160,7 @@ public class NetworkPlayerController : NetworkBehaviour
     [Space]
     [Header("Sound effects")]
     public AudioSource playerAudio;
+    public AudioSource playerStepsAudio;
     [SerializeField] AudioClip footStepsSound;
     [SerializeField] AudioClip basicAttackSlashSound;
     [SerializeField] AudioClip basicAttackImpactSound;
@@ -195,7 +191,7 @@ public class NetworkPlayerController : NetworkBehaviour
     {
         print("Soy un nuevo jugador! Mi id es: " + NetworkObjectId);
         
-        playerAudio = GetComponent<AudioSource>();
+        
         currentState = PlayerState.IDLE;
         canMove = true;
         Physics.gravity = new Vector3(0, -20.0F, 0);
@@ -231,8 +227,7 @@ public class NetworkPlayerController : NetworkBehaviour
         }
 
         else
-        {
-            print("Buenas a todos");
+        {        
             transform.parent.transform.position = GameObject.FindGameObjectWithTag("PlayerTwoSpawn").transform.position;
             spawnPoint = playerTwoSpawn;
 
@@ -240,23 +235,8 @@ public class NetworkPlayerController : NetworkBehaviour
             enemyController = enemy.GetComponentInChildren<NetworkPlayerController>();
             enemyController.enemy = GameObject.FindGameObjectWithTag("PlayerTwo");
             enemyController.enemyController = GetComponent<NetworkPlayerController>();
-
-            //gameManager.targetGroupCam.AddMember(gameObject.transform, 1.0f, 3);
-            //gameManager.targetGroupCam.AddMember(enemy.transform, 1.0f, 3);
-
-
             gameManager.mainCam.GetComponent<CameraAdjusting>().SetPlayerInCamera();
-
-            //if (IsOwner)
-            //{
-            //    gameManager.mainCam.GetComponent<CameraAdjusting>().cameraState = CameraAdjusting.CameraState.FIRST_CAMERA;
-            //    gameManager.mainCam.GetComponent<CameraAdjusting>().SwitchCameraState();
-            //}
-            //else
-            //{
-            //    gameManager.mainCam.GetComponent<CameraAdjusting>().cameraState = CameraAdjusting.CameraState.SECOND_CAMERA;
-            //    gameManager.mainCam.GetComponent<CameraAdjusting>().SwitchCameraState();
-            //}
+                    
         }
         GetComponent<PlayerInput>().neverAutoSwitchControlSchemes = false;
         canBasicAttack = true;
@@ -265,6 +245,7 @@ public class NetworkPlayerController : NetworkBehaviour
         canParry = true;
         canDashing = true;
         canVoodooPow = true;
+        gameManager.SetGameplayUI();
 
         base.OnNetworkSpawn();
     }
@@ -357,28 +338,7 @@ public class NetworkPlayerController : NetworkBehaviour
         print("Actualizo cliente id: ." + NetworkObjectId);
         currentState = newState;
     }
-
-    //[ClientRpc]
-    //private void PingClientRpc()
-    //{
-    //    latency = NetworkManager.LocalTime.Time - lastTime;
-
-    //    lastTime = NetworkManager.LocalTime.Time;
-
-    //    print("Latency: " + (latency * 1000).ToString() + "ms");
-
-    //    latencyText.text = "LATENCY: " + (latency * 100).ToString();
-    //}
-
-    //[ClientRpc]
-    //private void SendIntegers(List<int> integers)
-    //{
-    //    // Do something with the received integers
-    //    foreach (int integer in integers)
-    //    {
-    //        Debug.Log("Received integer: " + integer);
-    //    }
-    //}
+   
     private void FixedUpdate()
     {
         if(IsServer) return;
@@ -387,17 +347,6 @@ public class NetworkPlayerController : NetworkBehaviour
         FixJump();
        
     }
-
-    
-    //private void Update()
-    //{
-    //    if(enemy != null && enemyController == null)
-    //    {
-    //        enemyController = enemy.GetComponent<PlayerController>();
-    //        print("Asigno");
-    //    }
-
-    //}
     private void TakeInputs()
     {
         
@@ -488,6 +437,8 @@ public class NetworkPlayerController : NetworkBehaviour
                 TransitionToStateServerRpc(currentState);
                 if (enemyController.playerAnimator.GetBool("Stunned") == false)
                 {
+                    enemyController.canMove = false;
+                    enemyController.canChangeState = false;
                     enemyController.playerAnimator.SetBool("Stunned", true);
                     parryStunnedParticle.Play();
                     parryDoneParticle.Play();
@@ -506,7 +457,8 @@ public class NetworkPlayerController : NetworkBehaviour
             }
             else
             {
-
+                canChangeState = false;
+                canMove = false;
                 print("Received");
                 Vector3 relativePos = (transform.position - enemyController.gameObject.transform.position).normalized;
                 if (enemyController.currentState == PlayerState.SLOW_ATACK)
@@ -518,7 +470,7 @@ public class NetworkPlayerController : NetworkBehaviour
                         playerAnimator.SetBool("Receiving", true);
                         enemyController.slowAtackImpactParticle.Play();
                         playerAudio.clip = slowAttackImpactSound;
-                        playerAudio.loop = false;
+                        
                         playerAudio.Play();
                         gameManager.RumblePulse(1.0f, 2.0f, 0.8f, playerOne);
 
@@ -563,9 +515,9 @@ public class NetworkPlayerController : NetworkBehaviour
                     enemyController.gameManager.ChangeMagic((int)totalDmgDone, !playerOne);
 
 
-                    relativePos.y = 1f;
+                    relativePos.y = 0.8f;
                     print(relativePos);
-                    GetComponent<Rigidbody>().AddForce((relativePos * totalDmgDone * enemyController.currentChargedAttackForce) * 0.2f, ForceMode.Impulse);
+                    GetComponent<Rigidbody>().AddForce((relativePos * totalDmgDone * enemyController.currentChargedAttackForce) * 0.1f, ForceMode.Impulse);
                     print(relativePos * totalDmgDone * enemyController.currentChargedAttackForce);
                     //Cuando esa fuerza llega a determinado punto, manda por los aires.
                 }
@@ -578,10 +530,13 @@ public class NetworkPlayerController : NetworkBehaviour
                     if (playerAnimator.GetBool("Receiving") == false)
                     {
                         playerAnimator.SetBool("Receiving", true);
+                        if (enemyController.basicAtackImpactParticle.isPlaying) enemyController.basicAtackImpactParticle.Clear();
                         enemyController.basicAtackImpactParticle.Play();
+
                         playerAudio.clip = basicAttackImpactSound;
-                        playerAudio.loop = false;
+                        if (playerAudio.isPlaying) playerAudio.Stop();
                         playerAudio.Play();
+                        print("Audio is playing: " + playerAudio.isPlaying);
 
                     }
 
@@ -618,9 +573,9 @@ public class NetworkPlayerController : NetworkBehaviour
                         }
                     }
                     enemyController.gameManager.ChangeMagic((int)totalDmgDone, !playerOne);
-                    relativePos.y = 0.2f;
+                    relativePos.y = 0f;
                     print(relativePos);
-                    GetComponent<Rigidbody>().AddForce(relativePos * totalDmgDone, ForceMode.Impulse);
+                    GetComponent<Rigidbody>().AddForce((relativePos * totalDmgDone) * 0.8f, ForceMode.Impulse);
                 }
 
             }
@@ -786,7 +741,12 @@ public class NetworkPlayerController : NetworkBehaviour
     public void ReturnToMove()
     {
         canMove = true;
+
         canChangeState = true;
+
+        chargingSlowAttack = false;
+
+        chargeTimer = 0f;
         //Se podría sustituir por un switch
         if (playerAnimator.GetBool("Receiving") == true)
         {
@@ -810,9 +770,20 @@ public class NetworkPlayerController : NetworkBehaviour
             }
             else
             {
-                currentState = PlayerState.IDLE;
-                TransitionToStateServerRpc(currentState);
-                print("Cambio a idle");
+                if (movementInput != Vector2.zero && canMove)
+                {
+                    currentState = PlayerState.MOVEMENT;
+
+                    playerAnimator.SetBool("Running", true);
+                }
+
+                else currentState = PlayerState.IDLE;
+            }
+
+            if (playerAnimator.GetBool("SlowAttack") == true)
+            {
+                playerAnimator.SetBool("SlowAttack", false);
+
             }
 
         }
@@ -822,8 +793,17 @@ public class NetworkPlayerController : NetworkBehaviour
             {
                 playerAnimator.SetBool("BlockedHit", false);                
                 playerAnimator.Play("Block", 0, 1.0f);
-            }          
+            }
             //Aquí podría ir el idle
+
+            if (movementInput != Vector2.zero && canMove)
+            {
+                currentState = PlayerState.MOVEMENT;
+
+                playerAnimator.SetBool("Running", true);
+            }
+
+            else currentState = PlayerState.IDLE;
         }
 
         if (playerAnimator.GetBool("Stunned") == true)
@@ -897,13 +877,7 @@ public class NetworkPlayerController : NetworkBehaviour
     {
         if (IsOwner)
         {
-            if (dash)
-            {
-                //print(canDash);
-                //print(canChangeState);
-                //print(canDashing);
-
-            }
+            
             if (dash && canDash && canChangeState && canDashing && (playerOne && (gameManager.playerOneMagic >= dashMagicCost) || (!playerOne && (gameManager.playerTwoMagic >= dashMagicCost))))
             {
                 gameManager.ChangeMagic(-dashMagicCost, playerOne);
@@ -1223,10 +1197,7 @@ public class NetworkPlayerController : NetworkBehaviour
                 {
                     if (playerAnimator.GetBool("BasicAtack") == true)
                     {
-                        playerAnimator.SetBool("BasicAtack", false);
-                        currentState = PlayerState.IDLE;
-                        TransitionToStateServerRpc(currentState);
-                        print("Cambio a idle");
+                        playerAnimator.SetBool("BasicAtack", false);                       
                     }
                 }
                 if (!basicAtacking && !canBasicAttack) canBasicAttack = true;
@@ -1258,8 +1229,7 @@ public class NetworkPlayerController : NetworkBehaviour
                 {
                     if (playerAnimator.GetBool("BasicAtack") == true)
                     {
-                        playerAnimator.SetBool("BasicAtack", false);
-                        currentState = PlayerState.IDLE;                    
+                        playerAnimator.SetBool("BasicAtack", false);                                     
                       
                     }
                 }
@@ -1271,83 +1241,129 @@ public class NetworkPlayerController : NetworkBehaviour
 
     private void SlowAtack()
     {
-        if (slowAtacking && canChangeState && canSlowAttack)
+        if (IsOwner)
         {
-            chargeSlowAttackParticle.Play();
-            currentChargedAttackForce = 0f;
-            canChangeState = false;
-            canMove = false;
-            Vector3 relativePos = enemy.transform.position - transform.position;
-            transform.rotation = Quaternion.LookRotation(new Vector3(relativePos.x, 0, relativePos.z).normalized, Vector3.up);
-            chargingSlowAttack = true;
-
-            if (IsOwner)
+            if (slowAtacking && canChangeState && canSlowAttack)
             {
+                chargeSlowAttackParticle.Play();
+                currentChargedAttackForce = 0f;
+                canChangeState = false;
+                canMove = false;
+                Vector3 relativePos = enemy.transform.position - transform.position;
+                transform.rotation = Quaternion.LookRotation(new Vector3(relativePos.x, 0, relativePos.z).normalized, Vector3.up);
+                chargingSlowAttack = true;
                 currentState = PlayerState.SLOW_ATACK;
+                playerAnimator.SetBool("SlowAttack", true);
+                print("Ataque fuerte");
+                canSlowAttack = false;
                 TransitionToStateServerRpc(currentState);
-            }
-                      
-            playerAnimator.SetBool("SlowAttack", true);
-            print("Ataque fuerte");
-            canSlowAttack = false;
-        }
-        else
-        {
-            if (!slowAtacking)
-            {
-                if (playerAnimator.GetBool("SlowAttack") == true)
-                {
-                    playerAnimator.SetBool("SlowAttack", false);
-                    slowAtackSlashParticle.Play();
-                    chargeSlowAttackParticle.Stop();
-                }
-
-
-
-                //if (!canSlowAttack) canSlowAttack = true;
-
-                if (GetComponent<Animator>().speed == 0f && currentState == PlayerState.SLOW_ATACK)
-                {
-                    GetComponent<Animator>().speed = 1f;
-
-                    chargingSlowAttack = false;
-
-                }
-
-                if (!chargingSlowAttack && !canSlowAttack) canSlowAttack = true;
-
-                currentChargedAttackForce = chargeTimer * 5;
-                //print(currentChargedAttackForce);
-            }
-
-        }
-
-        if (chargingSlowAttack)
-        {
-            if (chargeTimer < maxChargeTime)
-            {
-                chargeTimer += Time.deltaTime;
             }
             else
             {
-                if (GetComponent<Animator>().speed == 0f)
+                if (!slowAtacking)
                 {
-                    GetComponent<Animator>().speed = 1f;
-                    chargingSlowAttack = false;
-                    if (playerAnimator.GetBool("SlowAttack") == true)
+                    if (chargeSlowAttackParticle.isPlaying) chargeSlowAttackParticle.Stop();
+
+
+                    if (GetComponent<Animator>().speed == 0f && currentState == PlayerState.SLOW_ATACK)
                     {
-                        playerAnimator.SetBool("SlowAttack", false);
+                        GetComponent<Animator>().speed = 1f;
+                        slowAtackSlashParticle.Play();
+                    }
+
+                    if (!chargingSlowAttack && !canSlowAttack) canSlowAttack = true;
+
+                    currentChargedAttackForce = chargeTimer * 5;
+                }
+
+            }
+
+            if (chargingSlowAttack)
+            {
+                if (chargeTimer < maxChargeTime)
+                {
+                    chargeTimer += Time.deltaTime;
+                }
+                else
+                {
+                    if (GetComponent<Animator>().speed == 0f)
+                    {
+                        GetComponent<Animator>().speed = 1f;
+
                         slowAtackSlashParticle.Play();
                         chargeSlowAttackParticle.Stop();
+                        currentChargedAttackForce = chargeTimer * 5;
+
                     }
                 }
+
             }
+
 
 
         }
 
+        else
+        {
+            if(currentState == PlayerState.SLOW_ATACK)
+            {
+                if (slowAtacking && canChangeState && canSlowAttack)
+                {
+                    chargeSlowAttackParticle.Play();
+                    currentChargedAttackForce = 0f;
+                    canChangeState = false;
+                    canMove = false;
+                    Vector3 relativePos = enemy.transform.position - transform.position;
+                    transform.rotation = Quaternion.LookRotation(new Vector3(relativePos.x, 0, relativePos.z).normalized, Vector3.up);
+                    chargingSlowAttack = true;
+                    currentState = PlayerState.SLOW_ATACK;
+                    playerAnimator.SetBool("SlowAttack", true);
+                    print("Ataque fuerte");
+                    canSlowAttack = false;
+                   
+                }
+                else
+                {
+                    if (!slowAtacking)
+                    {
+                        if (chargeSlowAttackParticle.isPlaying) chargeSlowAttackParticle.Stop();
 
 
+                        if (GetComponent<Animator>().speed == 0f && currentState == PlayerState.SLOW_ATACK)
+                        {
+                            GetComponent<Animator>().speed = 1f;
+                            slowAtackSlashParticle.Play();
+                        }
+
+                        if (!chargingSlowAttack && !canSlowAttack) canSlowAttack = true;
+
+                        currentChargedAttackForce = chargeTimer * 5;
+                    }
+
+                }
+
+                if (chargingSlowAttack)
+                {
+                    if (chargeTimer < maxChargeTime)
+                    {
+                        chargeTimer += Time.deltaTime;
+                    }
+                    else
+                    {
+                        if (GetComponent<Animator>().speed == 0f)
+                        {
+                            GetComponent<Animator>().speed = 1f;
+
+                            slowAtackSlashParticle.Play();
+                            chargeSlowAttackParticle.Stop();
+                            currentChargedAttackForce = chargeTimer * 5;
+
+                        }
+                    }
+
+                }
+            }
+        }
 
 
     }

@@ -9808,6 +9808,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1672907116}
     - target: {fileID: 1700436923791805722, guid: ef88af0e1b363d44eae53352c9d657c9, type: 3}
+      propertyPath: loadingScreen
+      value: 
+      objectReference: {fileID: 28762725}
+    - target: {fileID: 1700436923791805722, guid: ef88af0e1b363d44eae53352c9d657c9, type: 3}
       propertyPath: activePlayMode
       value: 1
       objectReference: {fileID: 0}
@@ -9839,6 +9843,10 @@ PrefabInstance:
       propertyPath: playerTwoMagicBar
       value: 
       objectReference: {fileID: 189507534}
+    - target: {fileID: 1700436923791805722, guid: ef88af0e1b363d44eae53352c9d657c9, type: 3}
+      propertyPath: goToMainScreenButton
+      value: 
+      objectReference: {fileID: 1891300113}
     - target: {fileID: 1700436923791805722, guid: ef88af0e1b363d44eae53352c9d657c9, type: 3}
       propertyPath: lifesArrayOne.Array.size
       value: 3
@@ -13171,7 +13179,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh64548
+  m_Name: pb_Mesh223634
   serializedVersion: 10
   m_SubMeshes:
   - serializedVersion: 2
@@ -13696,7 +13704,7 @@ MonoBehaviour:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_SelectedColor: {r: 1, g: 1, b: 0.28627452, a: 1}
     m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
@@ -14412,7 +14420,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 6a160c0e86149a446bcdab0d24bb935e, type: 2}
+  - {fileID: 2100000, guid: 9df49564dfa26c648a0b10b2f10705ca, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -21,7 +21,7 @@ public class HitCollision : MonoBehaviour
                 gM.ChangeFavor(5);
                 Debug.Log("Impacté lento");
                 playerC.enemyTriggered = false;
-
+                playerC.chargingSlowAttack = false;
             }
 
             if(playerC.basicAtacking && playerC.enemyTriggered)

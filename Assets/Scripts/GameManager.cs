@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using Unity.Netcode;
 using UnityEngine.Audio;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class GameManager : MonoBehaviour
 {
@@ -36,13 +37,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] int playerTwoCharacterId;
 
     [Header("Canvas Settings")]
-    [SerializeField] TextMeshProUGUI textPlayerOneFavor;
-    [SerializeField] TextMeshProUGUI textPlayerTwoFavor;
-    [SerializeField] TextMeshProUGUI textPlayerOneLifes;
-    [SerializeField] TextMeshProUGUI textPlayerTwoLifes;
-    [SerializeField] TextMeshProUGUI textPlayerOneMagic;
-    [SerializeField] TextMeshProUGUI textPlayerTwoMagic;
-
+    
 
     [SerializeField] GameObject playerOneMagicBar;
     [SerializeField] GameObject playerTwoMagicBar;
@@ -75,6 +70,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] bool canPause;
     public bool gamePaused = false;
     [SerializeField] GameObject pausePanels;
+    [SerializeField] GameObject goToMainScreenButton;
+    [SerializeField] GameObject loadingScreen;
 
     public static GameManager instance;
 
@@ -125,6 +122,12 @@ public class GameManager : MonoBehaviour
             
             
         }
+    }
+
+    public void GoToMainMenu()
+    {
+        loadingScreen.SetActive(true);
+        SceneManager.LoadScene("TitleScreen");
     }
 
     public void ChangePlayMode(PlayMode playMode)
@@ -277,6 +280,11 @@ public class GameManager : MonoBehaviour
         balance.GetComponent<BalanceFavor>().SetBalanceAngle();
     }
 
+    internal void SetGameplayUI()
+    {
+        gameplayCanvas.SetActive(true);
+    }
+
     public void ChangeMagic(int magicAmount, bool playerOne)
     {
         if (playerOne)
@@ -357,6 +365,7 @@ public class GameManager : MonoBehaviour
         }
 
         victoryPanel.SetActive(true);
+        EventSystem.current.SetSelectedGameObject(goToMainScreenButton);
         playerOne.SetActive(false);
         playerTwo.SetActive(false);
         gameplayCanvas.SetActive(false);
@@ -368,15 +377,7 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene("TitleScreen");
     }
 
-    private void UpdateCanvas()
-    {
-        textPlayerOneFavor.text = "ALLY FAVOR: " + playerOneFavor;
-        textPlayerTwoFavor.text = "ENEMY FAVOR: " + playerTwoFavor;
-        textPlayerOneLifes.text = "ALLY LIFES: " + playerOneLifes;
-        textPlayerTwoLifes.text = "ENEMY LIFES: " + playerTwoLifes;
-        textPlayerOneMagic.text = "ALLY MAGIC: " + playerOneMagic;
-        textPlayerTwoMagic.text = "ENEMY MAGIC: " + playerTwoMagic;
-    }
+    
 
 
     void OnPlayerJoined(PlayerInput playerInput)
