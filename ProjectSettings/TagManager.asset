@@ -17,6 +17,8 @@ TagManager:
   - PlayerOneSpawn
   - PlayerTwoSpawn
   - NetworkManager
+  - PostProcessing
+  - Training
   layers:
   - Default
   - TransparentFX
@@ -26,7 +28,7 @@ TagManager:
   - UI
   - Player
   - Enemy
-  - 
+  - PostProcessing
   - 
   - 
   - 

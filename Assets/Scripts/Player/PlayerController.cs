@@ -50,7 +50,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForceContinuous;
 
     [SerializeField] private int maxJumps;
-    [SerializeField] private bool inAir = false;
+    [SerializeField] public bool inAir = false;
     [SerializeField] private bool canCancelJump = false;
     [SerializeField] private float jumpCooldown;
     [SerializeField] private float jumpMaxTime;
@@ -151,8 +151,9 @@ public class PlayerController : MonoBehaviour
 
     [Space]
     [Header("Sound effects")]
-    public AudioSource playerAudio;
-    [SerializeField] AudioClip footStepsSound;
+    [SerializeField] AudioSource playerAudio;
+    [SerializeField] AudioSource playerStepsAudio;
+   
     [SerializeField] AudioClip basicAttackSlashSound;
     [SerializeField] AudioClip basicAttackImpactSound;
 
@@ -180,7 +181,7 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
 
-        playerAudio = GetComponent<AudioSource>();
+        
         currentState = PlayerState.IDLE;
         canMove = true;
         Physics.gravity = new Vector3(0, -20.0F, 0);
@@ -192,16 +193,25 @@ public class PlayerController : MonoBehaviour
         playerOneSpawn = GameObject.FindGameObjectWithTag("PlayerOneSpawn").transform;
         playerTwoSpawn = GameObject.FindGameObjectWithTag("PlayerTwoSpawn").transform;
 
+        
         if (playerOne)
         {
-            transform.parent.transform.position = playerOneSpawn.position;
+            if (gameManager.activePlayMode != GameManager.PlayMode.TRAINING)
+            {
+                transform.parent.transform.position = playerOneSpawn.position;
+            }
+           
             spawnPoint = playerOneSpawn;
 
         }
 
         else
         {
-            transform.parent.transform.position = playerTwoSpawn.position;
+
+            if (gameManager.activePlayMode != GameManager.PlayMode.TRAINING)
+            {
+                transform.parent.transform.position = playerTwoSpawn.position;
+            }
             spawnPoint = playerTwoSpawn;
         }
 
@@ -282,6 +292,11 @@ public class PlayerController : MonoBehaviour
         print("Voodoo Ult");
     }
 
+    public void OnPauseRequested(InputAction.CallbackContext context)
+    {
+        gameManager.OnPause();
+        print("Pause Request");
+    }
     #endregion
 
     private void FixedUpdate()
@@ -359,12 +374,13 @@ public class PlayerController : MonoBehaviour
         {
             enemyController.currentState = PlayerState.STUNNED;
 
-            canChangeState = false;
-            canMove = false;
+            //enemyController.canChangeState = false;
+            //enemyController.canMove = false;
             if (enemyController.playerAnimator.GetBool("Stunned") == false)
             {
-                
 
+                enemyController.canMove = false;
+                enemyController.canChangeState = false;
                 enemyController.playerAnimator.SetBool("Stunned", true);
                 parryStunnedParticle.Play();
                 parryDoneParticle.Play();
@@ -398,8 +414,10 @@ public class PlayerController : MonoBehaviour
                     playerAnimator.SetBool("Receiving", true);
                     enemyController.slowAtackImpactParticle.Play();
                     playerAudio.clip = slowAttackImpactSound;
-                    playerAudio.loop = false;
+                   
                     playerAudio.Play();
+                    print("Audio is playing: " + playerAudio.isPlaying);
+                   
                     gameManager.RumblePulse(1.0f, 2.0f, 0.8f, playerOne);
                     
                 }
@@ -454,8 +472,9 @@ public class PlayerController : MonoBehaviour
                     playerAnimator.SetBool("Receiving", true);
                     enemyController.basicAtackImpactParticle.Play();
                     playerAudio.clip = basicAttackImpactSound;
-                    playerAudio.loop = false;
-                    playerAudio.Play();                    
+               
+                    playerAudio.Play();
+                    print("Audio is playing: " + playerAudio.isPlaying);
                 }
                 if (!playerOne)
                 {
@@ -644,7 +663,7 @@ public class PlayerController : MonoBehaviour
         relativePos = enemy.transform.position - transform.position;
         playerRb.velocity = (relativePos.normalized * dashSpeed);
         dashParticle.Play();
-        playerAudio.loop = false;
+        
         playerAudio.clip = dashStartSound;
         playerAudio.Play();
         if (!isDashing)
@@ -742,7 +761,7 @@ public class PlayerController : MonoBehaviour
         if (isParrying && !parryStartedParticle.isPlaying)
         {
             parryStartedParticle.Play();
-            playerAudio.loop = false;
+    
             playerAudio.clip = parryStartedSound;
             playerAudio.Play();
         }
@@ -957,12 +976,10 @@ public class PlayerController : MonoBehaviour
             playerAnimator.SetBool("Running", true);
             playerAnimator.SetFloat("Speed", movementInput.magnitude);
 
-            if(movementInput.magnitude >= 0.6f && !isRunning && !inAir)
+            if(movementInput.magnitude >= 0.6f && !isRunning && !inAir && !playerStepsAudio.isPlaying)
             {
-                playerAudio.clip = footStepsSound;
-                playerAudio.volume = 0.2f;
-                playerAudio.loop = true;
-                playerAudio.Play();
+               
+                playerStepsAudio.Play();
                 isRunning = true;
                 startRunAnimationParticle.Play();
                 runningParticle.Play(); 
@@ -972,8 +989,8 @@ public class PlayerController : MonoBehaviour
             if ((movementInput.magnitude < 0.6f && isRunning) || (inAir && isRunning))
             {
                 
-                playerAudio.Stop();
-                playerAudio.loop = false;
+                playerStepsAudio.Stop();
+               
                 isRunning = false;
                 
                 runningParticle.Stop();
@@ -990,7 +1007,7 @@ public class PlayerController : MonoBehaviour
            
             if ((movementInput.magnitude < 0.6f && isRunning) || !canMove)
             {
-                playerAudio.Stop();
+                playerStepsAudio.Stop();
                 isRunning = false;               
                 runningParticle.Stop();
             }
@@ -1085,11 +1102,21 @@ public class PlayerController : MonoBehaviour
             canCancelJump = false;
             if(playerRb.velocity.y < -0.3f) groundHitParticle.Play();
 
-
+            playerRb.useGravity = true;
         }
     }
 
-   
+
+    //private void OnCollisionStay(Collision collision)
+    //{
+    //    if (collision.gameObject.CompareTag("Floor"))
+    //    {        
+
+    //        playerRb.useGravity = true;
+    //    }
+    //}
+
+
 
     private void OnTriggerEnter(Collider other)
     {      
@@ -1100,9 +1127,10 @@ public class PlayerController : MonoBehaviour
                 gameManager.ReduceLife(playerOne);
                 print("Colisiono fuego");
             }
-        }
+    }
 
-    
+
+   
 }
 
 

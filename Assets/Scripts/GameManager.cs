@@ -8,6 +8,8 @@ using Cinemachine;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.SceneManagement;
 using Unity.Netcode;
+using UnityEngine.Audio;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -16,6 +18,7 @@ public class GameManager : MonoBehaviour
         ONLINE, OFFLINE, TRAINING
     }
     [SerializeField] public PlayMode activePlayMode;
+
 
     [Header("Network Variables")]
     [SerializeField] int defaultFavor;
@@ -41,6 +44,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI textPlayerTwoMagic;
 
 
+    [SerializeField] GameObject playerOneMagicBar;
+    [SerializeField] GameObject playerTwoMagicBar;
+
     [SerializeField] GameObject balance;
     [SerializeField] GameObject RbutonCanvasOne;
     [SerializeField] GameObject RbutonCanvasTwo;
@@ -58,11 +64,17 @@ public class GameManager : MonoBehaviour
 
     GameObject playerOne;
     GameObject playerTwo;
+   
 
     bool canDie = true;
 
     Gamepad playerOneGamepad;
     Gamepad playerTwoGamepad;
+
+    //Pause
+    [SerializeField] bool canPause;
+    public bool gamePaused = false;
+    [SerializeField] GameObject pausePanels;
 
     public static GameManager instance;
 
@@ -71,6 +83,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject serverManager;
     [SerializeField] private GameObject approvalManager;
 
+
+    bool trainingSetUp = false;
     private void Awake()
     {
         if (instance == null) instance = this;
@@ -90,11 +104,28 @@ public class GameManager : MonoBehaviour
         {
             GetComponent<PlayerInputManager>().playerPrefab = charactersArrayOffline[0];
         }
-       
+
+
+        if(playerOneMagicBar != null && playerTwoMagicBar != null)
+        {
+            playerOneMagicBar.GetComponent<Image>().fillAmount = playerOneMagic / 100;
+            playerTwoMagicBar.GetComponent<Image>().fillAmount = playerTwoMagic / 100;
+        }
+     
         //activePlayMode = PlayMode.ONLINE;
     }
 
-    
+    public void OnPause()
+    {
+        if (canPause && !gamePaused)
+        {
+            gamePaused = true;
+            Time.timeScale = 0f;
+            pausePanels.SetActive(true);
+            
+            
+        }
+    }
 
     public void ChangePlayMode(PlayMode playMode)
     {
@@ -117,6 +148,7 @@ public class GameManager : MonoBehaviour
             approvalManager.SetActive(false);
             GetComponent<PlayerInputManager>().playerPrefab = charactersArrayOffline[0];
             SceneManager.LoadScene("OfflineRing");
+            canPause = true;
         }
         else
         {
@@ -125,7 +157,10 @@ public class GameManager : MonoBehaviour
             serverManager.SetActive(false);
             approvalManager.SetActive(false);
             SceneManager.LoadScene("TrainingMode");
+            canPause = true;
         }
+
+        
     }
     private void Update()
     {
@@ -147,6 +182,38 @@ public class GameManager : MonoBehaviour
                     mainCam.LookAt = playerOne.transform;
                 }
             }
+        }
+
+        if(activePlayMode == PlayMode.TRAINING && !trainingSetUp)
+        {
+            trainingSetUp = true;
+            playerOne = GameObject.FindGameObjectWithTag("Player");
+            playerOne.GetComponentInChildren<PlayerController>().playerOne = true;
+            playerOne.tag = "PlayerOne";
+
+            try
+            {
+                InputSystem.SetDeviceUsage(Gamepad.all[0], "Player1");
+                playerTwoGamepad = InputSystem.GetDevice<Gamepad>(new InternedString("Player2"));
+                
+            }
+            catch
+            {
+                InputSystem.SetDeviceUsage(Keyboard.current, "Player1");
+            }
+
+            playerTwo = GameObject.FindGameObjectWithTag("Training");
+            playerTwo.GetComponentInChildren<PlayerController>().playerOne = false;
+            playerTwo.tag = "PlayerTwo";
+            playerOne.GetComponentInChildren<PlayerController>().enemy = playerTwo;
+            playerTwo.GetComponentInChildren<PlayerController>().enemy = playerOne;
+            playerOne.GetComponentInChildren<PlayerController>().enemyController = playerTwo.GetComponentInChildren<PlayerController>();
+            playerTwo.GetComponentInChildren<PlayerController>().enemyController = playerOne.GetComponentInChildren<PlayerController>();
+                     
+            mainCam.Follow = playerOne.transform;
+            mainCam.LookAt = playerTwo.transform;
+
+            gameplayCanvas.SetActive(true);
         }
 
 
@@ -214,22 +281,27 @@ public class GameManager : MonoBehaviour
     {
         if (playerOne)
         {
+            print("Change magic");
             playerOneMagic += magicAmount;
 
             if (playerOneMagic > magicLimit) playerOneMagic = magicLimit;
+            float magicToBar = (float)playerOneMagic / 100;
+            playerOneMagicBar.GetComponent<Image>().fillAmount = magicToBar;
         }
         else
         {
             playerTwoMagic += magicAmount;
 
             if (playerTwoMagic > magicLimit) playerTwoMagic = magicLimit;
+            float magicToBar = (float)playerTwoMagic / 100;
+            playerTwoMagicBar.GetComponent<Image>().fillAmount = magicToBar;
         }
         print("Magic changed: ");
         //UpdateCanvas();
     }
     public void ReduceLife(bool playerOne)
     {
-        if (canDie)
+        if (canDie && activePlayMode != PlayMode.TRAINING)
         {
             if (playerOne)
             {
@@ -309,51 +381,54 @@ public class GameManager : MonoBehaviour
 
     void OnPlayerJoined(PlayerInput playerInput)
     {
-
-        //Local multiplayer
-        if (playerInput.playerIndex == 0)
-        {                 
-            playerOne = GameObject.FindGameObjectWithTag("Player");
-            playerOne.GetComponentInChildren<PlayerController>().playerOne = true;
-            playerOne.tag = "PlayerOne";
-            GetComponent<PlayerInputManager>().playerPrefab = charactersArrayOffline[playerTwoCharacterId];
-            try
-            {
-                InputSystem.SetDeviceUsage(Gamepad.all[0], "Player1");
-                playerTwoGamepad = InputSystem.GetDevice<Gamepad>(new InternedString("Player2"));
-                RbutonCanvasOne.SetActive(false);
-            }
-            catch
-            {
-                InputSystem.SetDeviceUsage(Keyboard.current, "Player1");              
-            }
-
-        }
-        else
+        if(activePlayMode == PlayMode.OFFLINE)
         {
-            playerTwo = GameObject.FindGameObjectWithTag("Player");
-            playerTwo.GetComponentInChildren<PlayerController>().playerOne = false;
-            playerTwo.tag = "PlayerTwo";
-            playerOne.GetComponentInChildren<PlayerController>().enemy = playerTwo;
-            playerTwo.GetComponentInChildren<PlayerController>().enemy = playerOne;
-            playerOne.GetComponentInChildren<PlayerController>().enemyController = playerTwo.GetComponentInChildren<PlayerController>();
-            playerTwo.GetComponentInChildren<PlayerController>().enemyController = playerOne.GetComponentInChildren<PlayerController>();
-            RbutonCanvasTwo.SetActive(false);
-            
-
-            try
+            //Local multiplayer
+            if (playerInput.playerIndex == 0)
             {
-                InputSystem.SetDeviceUsage(Gamepad.all[1], "Player2");
-                playerTwoGamepad = InputSystem.GetDevice<Gamepad>(new InternedString("Player2"));
+                playerOne = GameObject.FindGameObjectWithTag("Player");
+                playerOne.GetComponentInChildren<PlayerController>().playerOne = true;
+                playerOne.tag = "PlayerOne";
+                GetComponent<PlayerInputManager>().playerPrefab = charactersArrayOffline[playerTwoCharacterId];
+                try
+                {
+                    InputSystem.SetDeviceUsage(Gamepad.all[0], "Player1");
+                    playerTwoGamepad = InputSystem.GetDevice<Gamepad>(new InternedString("Player2"));
+                    RbutonCanvasOne.SetActive(false);
+                }
+                catch
+                {
+                    InputSystem.SetDeviceUsage(Keyboard.current, "Player1");
+                }
+
             }
-            catch
+            else
             {
-                InputSystem.SetDeviceUsage(Keyboard.current, "Player2");               
-            }        
-            mainCam.Follow = playerOne.transform;
-            mainCam.LookAt = playerTwo.transform;
+                playerTwo = GameObject.FindGameObjectWithTag("Player");
+                playerTwo.GetComponentInChildren<PlayerController>().playerOne = false;
+                playerTwo.tag = "PlayerTwo";
+                playerOne.GetComponentInChildren<PlayerController>().enemy = playerTwo;
+                playerTwo.GetComponentInChildren<PlayerController>().enemy = playerOne;
+                playerOne.GetComponentInChildren<PlayerController>().enemyController = playerTwo.GetComponentInChildren<PlayerController>();
+                playerTwo.GetComponentInChildren<PlayerController>().enemyController = playerOne.GetComponentInChildren<PlayerController>();
+                RbutonCanvasTwo.SetActive(false);
 
-            gameplayCanvas.SetActive(true);
+
+                try
+                {
+                    InputSystem.SetDeviceUsage(Gamepad.all[1], "Player2");
+                    playerTwoGamepad = InputSystem.GetDevice<Gamepad>(new InternedString("Player2"));
+                }
+                catch
+                {
+                    InputSystem.SetDeviceUsage(Keyboard.current, "Player2");
+                }
+                mainCam.Follow = playerOne.transform;
+                mainCam.LookAt = playerTwo.transform;
+
+                gameplayCanvas.SetActive(true);
+            }
+
         }
 
     }
@@ -373,4 +448,5 @@ public class GameManager : MonoBehaviour
         GameEnd();
     }
 
+   
 }

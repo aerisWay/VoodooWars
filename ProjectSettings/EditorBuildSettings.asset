@@ -15,10 +15,13 @@ EditorBuildSettings:
     path: Assets/Scenes/TrainingMode.unity
     guid: 1f531c917f35dca4fbd6228c48b2cde6
   - enabled: 1
-    path: Assets/Scenes/CameraSolved.unity
+    path: Assets/Scenes/OnlineRing.unity
     guid: e98bd43fc662db34d89ceeb26695c327
   - enabled: 1
     path: Assets/Scenes/OfflineRing.unity
     guid: 9a15807655fb5f84f8025e06c93a593e
+  - enabled: 1
+    path: Assets/Scenes/CameraSolved.unity
+    guid: b24ccb05679f4b04c978dd88c5f305f8
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: a00a6e9a5f0ed2748a1ce0f5de00787d, type: 2}
