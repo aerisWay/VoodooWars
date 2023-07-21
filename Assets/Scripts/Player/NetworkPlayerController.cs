@@ -203,19 +203,53 @@ public class NetworkPlayerController : NetworkBehaviour
         playerTwoSpawn = GameObject.FindGameObjectWithTag("PlayerTwoSpawn").transform;
         print(NetworkObjectId);
 
-
+       
         if (NetworkObjectId == 1)
         {
             
             playerOne = true;
             gameObject.tag = "PlayerOne";
             //networkManager.AddNetworkPrefab(gameManager.charactersArray[1]);
+            if (!IsOwner)
+            {
+                GetComponent<PlayerInput>().enabled = false;
+            }
+            else
+            {
+                try
+                {
+                    InputSystem.SetDeviceUsage(Gamepad.all[0], "Player1");
+                }
+                catch
+                {
+                    InputSystem.SetDeviceUsage(Keyboard.current, "Player1");
+                }
+            }
+
         }
-        if(NetworkObjectId == 2)
+        if (NetworkObjectId == 2)
         {
             playerOne = false;
             gameObject.tag = "PlayerTwo";
-        }        
+            if (!IsOwner)
+            {
+                GetComponent<PlayerInput>().enabled = false;
+            }
+            else
+            {
+                try
+                {
+                    InputSystem.SetDeviceUsage(Gamepad.all[0], "Player2");
+                }
+                catch
+                {
+                    InputSystem.SetDeviceUsage(Keyboard.current, "Player2");
+                }
+            }
+
+        }
+
+
         if (playerOne)
         {
             transform.parent.transform.position = GameObject.FindGameObjectWithTag("PlayerOneSpawn").transform.position;
@@ -238,7 +272,7 @@ public class NetworkPlayerController : NetworkBehaviour
             gameManager.mainCam.GetComponent<CameraAdjusting>().SetPlayerInCamera();
                     
         }
-        GetComponent<PlayerInput>().neverAutoSwitchControlSchemes = false;
+        //GetComponent<PlayerInput>().neverAutoSwitchControlSchemes = false;
         canBasicAttack = true;
         canSlowAttack = true;
         canTaunt = true;
@@ -626,40 +660,41 @@ public class NetworkPlayerController : NetworkBehaviour
                         gameManager.ChangeFavor(strongAttackBaseFavorGain);
                     }
 
-                    //float totalDmgDone;
+                    float totalDmgDone;
 
-                    //if (playerOne)
-                    //{
-                    //    if (gameManager.playerOneFavor > 50)
-                    //    {
-                    //        totalDmgDone = strongAttackBaseFavorGain + (strongAttackBaseFavorGain * (gameManager.playerOneFavor - 50) / 100);
-                    //    }
-                    //    else
-                    //    {
-                    //        totalDmgDone = strongAttackBaseFavorGain - (strongAttackBaseFavorGain * (50 - gameManager.playerOneFavor) / 100);
-                    //    }
-
-
-                    //}
-                    //else
-                    //{
-                    //    if (gameManager.playerOneFavor > 50)
-                    //    {
-                    //        totalDmgDone = strongAttackBaseFavorGain + (strongAttackBaseFavorGain * (gameManager.playerTwoFavor - 50) / 100);
-                    //    }
-                    //    else
-                    //    {
-                    //        totalDmgDone = strongAttackBaseFavorGain - (strongAttackBaseFavorGain * (50 - gameManager.playerTwoFavor) / 100);
-                    //    }
-                    //}
-
-                    //enemyController.gameManager.ChangeMagic((int)totalDmgDone, !playerOne);
+                    if (playerOne)
+                    {
+                        if (gameManager.playerOneFavor > 50)
+                        {
+                            totalDmgDone = strongAttackBaseFavorGain + (strongAttackBaseFavorGain * (gameManager.playerOneFavor - 50) / 100);
+                        }
+                        else
+                        {
+                            totalDmgDone = strongAttackBaseFavorGain - (strongAttackBaseFavorGain * (50 - gameManager.playerOneFavor) / 100);
+                        }
 
 
-                    //relativePos.y = 1f;
-                    //print(relativePos);
-                    //GetComponent<Rigidbody>().AddForce((relativePos * totalDmgDone * enemyController.currentChargedAttackForce) * 0.2f, ForceMode.Impulse);
-                    //print(relativePos * totalDmgDone * enemyController.currentChargedAttackForce);
+                    }
+                    else
+                    {
+                        if (gameManager.playerOneFavor > 50)
+                        {
+                            totalDmgDone = strongAttackBaseFavorGain + (strongAttackBaseFavorGain * (gameManager.playerTwoFavor - 50) / 100);
+                        }
+                        else
+                        {
+                            totalDmgDone = strongAttackBaseFavorGain - (strongAttackBaseFavorGain * (50 - gameManager.playerTwoFavor) / 100);
+                        }
+                    }
+
+                    enemyController.gameManager.ChangeMagic((int)totalDmgDone, !playerOne);
+
+
+                    relativePos.y = 0.8f;
+                    print(relativePos);
+                    //No depende de la fuerza ahora mismo
+                    GetComponent<Rigidbody>().AddForce((relativePos * totalDmgDone * 1) * 0.1f, ForceMode.Impulse);
+                    print(relativePos * totalDmgDone * enemyController.currentChargedAttackForce);
                     //Cuando esa fuerza llega a determinado punto, manda por los aires.
                 }
                 else if (enemyController.currentState == PlayerState.FAST_ATACK)
@@ -682,33 +717,33 @@ public class NetworkPlayerController : NetworkBehaviour
                         gameManager.ChangeFavor(basicAttackFavorGain);
                     }
 
-                    //float totalDmgDone;
-                    //if (playerOne)
-                    //{
-                    //    if (gameManager.playerOneFavor > 50)
-                    //    {
-                    //        totalDmgDone = basicAttackFavorGain + (basicAttackFavorGain * (gameManager.playerOneFavor - 50) / 100);
-                    //    }
-                    //    else
-                    //    {
-                    //        totalDmgDone = basicAttackFavorGain - (basicAttackFavorGain * (50 - gameManager.playerOneFavor) / 100);
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    if (gameManager.playerOneFavor > 50)
-                    //    {
-                    //        totalDmgDone = basicAttackFavorGain + (strongAttackBaseFavorGain * (gameManager.playerTwoFavor - 50) / 100);
-                    //    }
-                    //    else
-                    //    {
-                    //        totalDmgDone = basicAttackFavorGain - (strongAttackBaseFavorGain * (50 - gameManager.playerTwoFavor) / 100);
-                    //    }
-                    //}
-                    //enemyController.gameManager.ChangeMagic((int)totalDmgDone, !playerOne);
-                    //relativePos.y = 0.2f;
-                    //print(relativePos);
-                    //GetComponent<Rigidbody>().AddForce(relativePos * totalDmgDone, ForceMode.Impulse);
+                    float totalDmgDone;
+                    if (playerOne)
+                    {
+                        if (gameManager.playerOneFavor > 50)
+                        {
+                            totalDmgDone = basicAttackFavorGain + (basicAttackFavorGain * (gameManager.playerOneFavor - 50) / 100);
+                        }
+                        else
+                        {
+                            totalDmgDone = basicAttackFavorGain - (basicAttackFavorGain * (50 - gameManager.playerOneFavor) / 100);
+                        }
+                    }
+                    else
+                    {
+                        if (gameManager.playerOneFavor > 50)
+                        {
+                            totalDmgDone = basicAttackFavorGain + (strongAttackBaseFavorGain * (gameManager.playerTwoFavor - 50) / 100);
+                        }
+                        else
+                        {
+                            totalDmgDone = basicAttackFavorGain - (strongAttackBaseFavorGain * (50 - gameManager.playerTwoFavor) / 100);
+                        }
+                    }
+                    enemyController.gameManager.ChangeMagic((int)totalDmgDone, !playerOne);
+                    relativePos.y = 0f;
+                    print(relativePos);
+                    GetComponent<Rigidbody>().AddForce((relativePos * totalDmgDone) * 0.8f, ForceMode.Impulse);
                 }
 
             }
@@ -1449,8 +1484,11 @@ public class NetworkPlayerController : NetworkBehaviour
             //print(playerRb.velocity.magnitude);
             if (movementInput != Vector2.zero && canMove)
             {
-                currentState = PlayerState.MOVEMENT;
-                TransitionToStateServerRpc(currentState);
+                if(currentState == PlayerState.IDLE) {
+                    currentState = PlayerState.MOVEMENT;
+                    TransitionToStateServerRpc(currentState);
+                }
+               
                 //transform.forward = inputDir.normalized;
                 transform.forward = Vector3.Slerp(transform.forward, inputDir.normalized, Time.deltaTime * rotationSpeed);
                 playerRb.velocity = new Vector3(inputDir.x * playerSpeed, playerRb.velocity.y, inputDir.z * playerSpeed);
@@ -1494,6 +1532,8 @@ public class NetworkPlayerController : NetworkBehaviour
                     playerAudio.Stop();
                     isRunning = false;
                     runningParticle.Stop();
+                    //Pasar el input específico en un futuro
+                    //playerAnimator.SetFloat("Speed", 1.0f);
                 }
 
                 if (playerRb.velocity.magnitude <= 1f)
@@ -1518,8 +1558,8 @@ public class NetworkPlayerController : NetworkBehaviour
             if(currentState == PlayerState.MOVEMENT)
             {
                 playerAnimator.SetBool("Running", true);
-                playerAnimator.SetFloat("Speed", movementInput.magnitude);
-                if (movementInput.magnitude >= 0.6f && !isRunning && !inAir)
+                playerAnimator.SetFloat("Speed", 1.0f);
+                if (!isRunning && !inAir)
                 {
                     playerAudio.clip = footStepsSound;
                     playerAudio.volume = 0.2f;
@@ -1530,38 +1570,36 @@ public class NetworkPlayerController : NetworkBehaviour
                     runningParticle.Play();
                 }
 
-                if ((movementInput.magnitude < 0.6f && isRunning) || (inAir && isRunning))
-                {
+                //if ((movementInput.magnitude < 0.6f && isRunning) || (inAir && isRunning))
+                //{
 
-                    playerAudio.Stop();
-                    playerAudio.loop = false;
-                    isRunning = false;
+                //    playerAudio.Stop();
+                //    playerAudio.loop = false;
+                //    isRunning = false;
 
-                    runningParticle.Stop();
-                }
+                //    runningParticle.Stop();
+                //}
             }
             else
             {
-                if ((movementInput.magnitude < 0.6f && isRunning) || !canMove)
+                if (isRunning || !canMove)
                 {
                     playerAudio.Stop();
                     isRunning = false;
                     runningParticle.Stop();
                 }
 
-                if (playerRb.velocity.magnitude <= 1f)
+                if (playerAnimator.GetBool("Running") == true)
                 {
-                    if (playerAnimator.GetBool("Running") == true)
+                    playerAnimator.SetBool("Running", false);
+
+                    if (currentState == PlayerState.MOVEMENT)
                     {
-                        playerAnimator.SetBool("Running", false);
+                        currentState = PlayerState.IDLE;
 
-                        if (currentState == PlayerState.MOVEMENT)
-                        {
-                            currentState = PlayerState.IDLE;                           
-
-                        }
                     }
                 }
+
             }
         }
        
@@ -1570,7 +1608,7 @@ public class NetworkPlayerController : NetworkBehaviour
 
     private void Jump()
     {
-
+        //Añadir animacion si eso
         if (jumped && currentJumps > 0 && !inAir && (currentState == PlayerState.IDLE || currentState == PlayerState.MOVEMENT))
         {
             inAir = true;
@@ -1651,12 +1689,17 @@ public class NetworkPlayerController : NetworkBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        print("Tag: " + other.tag);
 
-        if ((other.gameObject.CompareTag("DeathFire")))
+        if (other.gameObject.CompareTag("DeathFire"))
         {
-            transform.position = spawnPoint.transform.position;
+            
             
             gameManager.ReduceLife(playerOne);
+
+            print("Murió");
+
+            transform.position = spawnPoint.transform.position;
         }
     }
 

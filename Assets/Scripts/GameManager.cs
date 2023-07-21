@@ -334,7 +334,7 @@ public class GameManager : MonoBehaviour
             balance.GetComponent<BalanceFavor>().SetBalanceAngle();
             //UpdateCanvas();
 
-
+            print("Se quitó una vida.");
             canDie = false;
             StartCoroutine("DeathCooldown");
 

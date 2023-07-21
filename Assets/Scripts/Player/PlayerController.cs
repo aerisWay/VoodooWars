@@ -775,10 +775,12 @@ public class PlayerController : MonoBehaviour
     {
         if (basicAtacking && canChangeState && canBasicAttack)
         {
-            currentState = PlayerState.FAST_ATACK;
-            playerAnimator.SetBool("BasicAtack", true);
             if (basicAtackSlashParticle.isPlaying) basicAtackSlashParticle.Clear();
             basicAtackSlashParticle.Play();
+
+            currentState = PlayerState.FAST_ATACK;
+            playerAnimator.SetBool("BasicAtack", true);
+            
             playerAudio.clip = basicAttackSlashSound;
             playerAudio.Play();
             
